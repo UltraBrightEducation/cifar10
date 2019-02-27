@@ -6,7 +6,7 @@ TRAIN_STD = 25.18636131286621
 
 
 def get_channel_filename(image_id, channel):
-    return '{image_id}_{channel}.png'.format(image_id=image_id, channel=channel)
+    return "{image_id}_{channel}.png".format(image_id=image_id, channel=channel)
 
 
 def load_channel(path, image_size):
