@@ -3,21 +3,17 @@ from keras.models import Model
 from keras.applications.resnet50 import ResNet50
 
 
-def _conv_block(x, filters, kernel_size, activation, pool=None):
+def _conv_block(x, filters, kernel_size, activation, pool=(2, 2)):
     hidden = Conv2D(filters, kernel_size, activation=activation)(x)
-    hidden = BatchNormalization()(hidden)
     hidden = Conv2D(filters, kernel_size, activation=activation)(hidden)
-    hidden = BatchNormalization()(hidden)
-    if pool:
-        return MaxPool2D(pool_size=pool)(hidden)
+    hidden = MaxPool2D(pool_size=pool)(hidden)
     return hidden
 
 
-def simple_convnet(input_shape, n_classes, base_filters, activation, fc_size, dropout, classifier_activation):
+def convnet7(input_shape, n_classes, base_filters, activation, fc_size, dropout, classifier_activation):
     image = Input(shape=input_shape)
 
-    conv_1 = Conv2D(base_filters, 7, activation=activation)(image)
-    conv_1 = BatchNormalization()(conv_1)
+    conv_1 = _conv_block(image, filters=base_filters, kernel_size=3, activation=activation, pool=2)
     conv_2 = _conv_block(conv_1, filters=base_filters, kernel_size=3, activation=activation, pool=2)
     conv_2 = Dropout(dropout)(conv_2)
     conv_3 = _conv_block(conv_2, base_filters * 2, kernel_size=3, activation=activation)
@@ -38,34 +34,3 @@ def simple_convnet(input_shape, n_classes, base_filters, activation, fc_size, dr
 
     predictions = Dense(n_classes, activation=classifier_activation)(fc_2)
     return Model(image, predictions)
-
-
-def resnet50_transfer(input_shape, n_classes, activation, fc_size, classifier_activation):
-    # using a patched version of Keras BatchNorm to fix error when running transfer learning
-    # https://github.com/datumbox/keras/tree/fork/keras2.2.2
-    # http://blog.datumbox.com/the-batch-normalization-layer-of-keras-is-broken/
-
-    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-
-    resnet50 = Flatten()(base_model.output)
-    resnet50 = Dense(fc_size, activation=activation)(resnet50)
-    predictions = Dense(n_classes, activation=classifier_activation)(resnet50)
-    model = Model(inputs=base_model.input, outputs=predictions)
-
-    for layer in model.layers[:140]:  # default 179
-        print('freeze layer: {}'.format(layer))
-        layer.trainable = False
-        # if 'BatchNormalization' in str(layer):
-        #     pass
-        # else:
-        #     layer.trainable = False
-
-    for layer in model.layers[140:]:
-        print('trainable layer: {}'.format(layer))
-        layer.trainable = True
-
-    return model
-
-
-MODELS = {'simple_convnet': simple_convnet, 'resnet50_transfer': resnet50_transfer}
-

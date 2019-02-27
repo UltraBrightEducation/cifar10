@@ -13,7 +13,6 @@ from sklearn.utils import compute_class_weight
 from model.data import load_data
 from model.model import MODELS
 
-
 def get_class_weight(y_true):
     classes = np.arange(y_true.shape[-1])
     class_counts = y_true.sum(0)
