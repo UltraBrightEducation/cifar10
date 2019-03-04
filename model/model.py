@@ -1,3 +1,4 @@
+from keras import Sequential
 from keras.layers import (
     Input,
     Conv2D,
@@ -7,7 +8,7 @@ from keras.layers import (
     Dense,
     Dropout,
     Flatten,
-)
+    Activation)
 from keras.models import Model
 
 
@@ -42,7 +43,8 @@ def convnet7(
         base_filters * 2, kernel_size=1, activation=activation, padding="same"
     )(conv_5)
 
-    hidden = GlobalMaxPooling2D()(conv_6)
+    # hidden = GlobalMaxPooling2D()(conv_6)
+    hidden = Flatten()(conv_6)
     hidden = Dropout(dropout)(hidden)
 
     fc_1 = Dense(fc_size, activation=activation)(hidden)
@@ -52,3 +54,36 @@ def convnet7(
 
     predictions = Dense(n_classes, activation=classifier_activation)(fc_2)
     return Model(image, predictions)
+
+
+def convnet4(
+    input_shape,
+    n_classes,
+    base_filters,
+    activation,
+    fc_size,
+    dropout,
+    classifier_activation,
+):
+    model = Sequential()
+    model.add(Conv2D(base_filters, (3, 3), padding='same',
+                     input_shape=input_shape))
+    model.add(Activation(activation))
+    model.add(Conv2D(base_filters, (3, 3)))
+    model.add(Activation(activation))
+    model.add(MaxPool2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(base_filters * 2, (3, 3), padding='same'))
+    model.add(Activation(activation))
+    model.add(Conv2D(base_filters * 2, (3, 3)))
+    model.add(Activation(activation))
+    model.add(MaxPool2D(pool_size=(2, 2)))
+    model.add(Dropout(dropout))
+
+    model.add(Flatten())
+    model.add(Dense(fc_size))
+    model.add(Activation(activation))
+    model.add(Dropout(dropout))
+    model.add(Dense(n_classes))
+    model.add(Activation(classifier_activation))

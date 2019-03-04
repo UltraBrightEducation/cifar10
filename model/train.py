@@ -8,6 +8,7 @@ from datetime import datetime
 import keras
 import numpy as np
 from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.models import load_model
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
@@ -34,6 +35,7 @@ if __name__ == "__main__":
     parser.add_argument("--model-name", choices=list(MODELS.keys()))
     parser.add_argument("--params-path")
     parser.add_argument("--artifact-directory")
+    parser.add_argument("--model-artifact", help="existing model checkpoint to continue training")
     args = parser.parse_args()
 
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -59,17 +61,20 @@ if __name__ == "__main__":
     with open(args.params_path) as params_file:
         hyperparameters = json.load(params_file)
 
-    model = MODELS.get(args.model_name)(
-        input_shape=X_train[0].shape,
-        n_classes=y_train.shape[-1],
-        base_filters=hyperparameters["base_filters"],
-        activation=hyperparameters["activation"],
-        fc_size=hyperparameters["fc_size"],
-        dropout=hyperparameters["dropout"],
-        classifier_activation=hyperparameters["classifier_activation"],
-    )
-    model.summary()
-    model.compile("adam", loss=hyperparameters["loss"], metrics=["acc"])
+    if args.model_artifact:
+        model = load_model(args.model_artifact)
+    else:
+        model = MODELS.get(args.model_name)(
+            input_shape=X_train[0].shape,
+            n_classes=y_train.shape[-1],
+            base_filters=hyperparameters["base_filters"],
+            activation=hyperparameters["activation"],
+            fc_size=hyperparameters["fc_size"],
+            dropout=hyperparameters["dropout"],
+            classifier_activation=hyperparameters["classifier_activation"],
+        )
+        model.summary()
+        model.compile("adam", loss=hyperparameters["loss"], metrics=["acc"])
 
     image_data_generator = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
