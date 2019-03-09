@@ -7,15 +7,15 @@ from datetime import datetime
 
 import keras
 import numpy as np
-from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from keras.models import load_model
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
 
-from model.model import convnet7
+from model.model import convnet7, convnet4
 
-MODELS = {"convnet7": convnet7}
+MODELS = {"convnet7": convnet7, "convnet4": convnet4}
 
 
 def get_class_weight(y_true):
@@ -35,7 +35,9 @@ if __name__ == "__main__":
     parser.add_argument("--model-name", choices=list(MODELS.keys()))
     parser.add_argument("--params-path")
     parser.add_argument("--artifact-directory")
-    parser.add_argument("--model-artifact", help="existing model checkpoint to continue training")
+    parser.add_argument(
+        "--model-artifact", help="existing model checkpoint to continue training"
+    )
     args = parser.parse_args()
 
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -113,7 +115,11 @@ if __name__ == "__main__":
         epochs=100,
         validation_data=(X_test, y_test),
         class_weight=get_class_weight(y_train),
-        callbacks=[ModelCheckpoint(checkpoint_format), TensorBoard(log_dir=log_dir)],
+        callbacks=[
+            ModelCheckpoint(checkpoint_format),
+            TensorBoard(log_dir=log_dir),
+            EarlyStopping(patience=10),
+        ],
     )
 
     # Score trained model.

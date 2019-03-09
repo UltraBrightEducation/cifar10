@@ -8,7 +8,8 @@ from keras.layers import (
     Dense,
     Dropout,
     Flatten,
-    Activation)
+    Activation,
+)
 from keras.models import Model
 
 
@@ -56,7 +57,7 @@ def convnet7(
     return Model(image, predictions)
 
 
-def convnet4(
+def convnet4:q(
     input_shape,
     n_classes,
     base_filters,
@@ -66,15 +67,14 @@ def convnet4(
     classifier_activation,
 ):
     model = Sequential()
-    model.add(Conv2D(base_filters, (3, 3), padding='same',
-                     input_shape=input_shape))
+    model.add(Conv2D(base_filters, (3, 3), padding="same", input_shape=input_shape))
     model.add(Activation(activation))
     model.add(Conv2D(base_filters, (3, 3)))
     model.add(Activation(activation))
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(base_filters * 2, (3, 3), padding='same'))
+    model.add(Conv2D(base_filters * 2, (3, 3), padding="same"))
     model.add(Activation(activation))
     model.add(Conv2D(base_filters * 2, (3, 3)))
     model.add(Activation(activation))
@@ -87,3 +87,5 @@ def convnet4(
     model.add(Dropout(dropout))
     model.add(Dense(n_classes))
     model.add(Activation(classifier_activation))
+
+    return model
