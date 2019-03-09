@@ -1,4 +1,5 @@
 from keras import Sequential
+from keras.applications import InceptionV3
 from keras.layers import (
     Input,
     Conv2D,
@@ -9,7 +10,7 @@ from keras.layers import (
     Dropout,
     Flatten,
     Activation,
-)
+    GlobalAveragePooling2D)
 from keras.models import Model
 
 
@@ -72,14 +73,14 @@ def convnet4(
     model.add(Conv2D(base_filters, (3, 3)))
     model.add(Activation(activation))
     model.add(MaxPool2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+    model.add(Dropout(dropout / 2))
 
     model.add(Conv2D(base_filters * 2, (3, 3), padding="same"))
     model.add(Activation(activation))
     model.add(Conv2D(base_filters * 2, (3, 3)))
     model.add(Activation(activation))
     model.add(MaxPool2D(pool_size=(2, 2)))
-    model.add(Dropout(dropout))
+    model.add(Dropout(dropout / 2))
 
     model.add(Flatten())
     model.add(Dense(fc_size))
@@ -89,3 +90,25 @@ def convnet4(
     model.add(Activation(classifier_activation))
 
     return model
+
+
+def inception_v3(
+    input_shape,
+    n_classes,
+    activation,
+    classifier_activation,
+    fc_size,
+    **kwargs
+):
+    image = Input(shape=input_shape)
+    base_model = InceptionV3(input_tensor=image, weights='imagenet', include_top=False)
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(fc_size, activation=activation)(x)
+    predictions = Dense(n_classes, activation=classifier_activation)(x)
+
+    for layer in base_model.layers:
+        layer.trainable = False
+
+    return Model(image, predictions)
+

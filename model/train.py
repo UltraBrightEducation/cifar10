@@ -13,9 +13,11 @@ from keras_preprocessing.image import ImageDataGenerator
 from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
 
-from model.model import convnet7, convnet4
+from model.model import convnet7, convnet4, inception_v3
 
-MODELS = {"convnet7": convnet7, "convnet4": convnet4}
+MODELS = {"convnet7": convnet7,
+          "convnet4": convnet4,
+          "inception_v3": inception_v3}
 
 
 def get_class_weight(y_true):
