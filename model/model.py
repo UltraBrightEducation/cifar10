@@ -57,7 +57,7 @@ def convnet7(
     return Model(image, predictions)
 
 
-def convnet4:q(
+def convnet4(
     input_shape,
     n_classes,
     base_filters,
