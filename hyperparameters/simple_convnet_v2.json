@@ -5,5 +5,7 @@
   "fc_size": 512,
   "dropout": 0.3,
   "classifier_activation": "softmax",
-  "loss": "categorical_crossentropy"
+  "loss": "categorical_crossentropy",
+  "batch_normalization": false,
+  "weight_decay": 0
 }

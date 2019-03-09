@@ -17,7 +17,14 @@ from keras.models import Model
 
 
 def _conv_block(
-    x, filters, activation, dropout=0.2, weight_decay=1e-4, kernel_size=3, pool=(2, 2)
+    x,
+    filters,
+    activation,
+    dropout=0.2,
+    weight_decay=1e-4,
+    kernel_size=3,
+    pool=(2, 2),
+    batch_normalization=True,
 ):
     hidden = Conv2D(
         filters,
@@ -33,7 +40,8 @@ def _conv_block(
         padding="same",
         kernel_regularizer=regularizers.l2(weight_decay),
     )(hidden)
-    hidden = BatchNormalization()(hidden)
+    if batch_normalization:
+        hidden = BatchNormalization()(hidden)
     hidden = MaxPool2D(pool_size=pool)(hidden)
     hidden = Dropout(dropout)(hidden)
     return hidden
@@ -47,11 +55,35 @@ def convnet6(
     fc_size,
     dropout,
     classifier_activation,
+    weight_decay,
+    batch_normalization,
+    **kwargs
 ):
     image = Input(shape=input_shape)
-    conv_1 = _conv_block(image, base_filters, activation, dropout=dropout)
-    conv_2 = _conv_block(conv_1, base_filters * 2, activation, dropout=dropout + 0.1)
-    conv_3 = _conv_block(conv_2, base_filters * 4, activation, dropout=dropout + 0.2)
+    conv_1 = _conv_block(
+        image,
+        filters=base_filters,
+        activation=activation,
+        dropout=dropout,
+        weight_decay=weight_decay,
+        batch_normalization=batch_normalization,
+    )
+    conv_2 = _conv_block(
+        conv_1,
+        filters=base_filters * 2,
+        activation=activation,
+        dropout=dropout + 0.1,
+        weight_decay=weight_decay,
+        batch_normalization=batch_normalization,
+    )
+    conv_3 = _conv_block(
+        conv_2,
+        filters=base_filters * 4,
+        activation=activation,
+        dropout=dropout + 0.2,
+        weight_decay=weight_decay,
+        batch_normalization=batch_normalization,
+    )
     # hidden = GlobalMaxPooling2D()(conv_6)
     # conv_4 = Conv2D(filters=base_filters * 4, kernel_size=1, activation=activation)
     hidden = Flatten()(conv_3)
@@ -70,6 +102,7 @@ def convnet4(
     fc_size,
     dropout,
     classifier_activation,
+    **kwargs
 ):
     model = Sequential()
     model.add(Conv2D(base_filters, (3, 3), padding="same", input_shape=input_shape))

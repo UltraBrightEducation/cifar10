@@ -50,15 +50,9 @@ if __name__ == "__main__":
     shutil.copy(args.params_path, artifact_directory)
 
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
-    print("x_train shape:", X_train.shape)
-    print(X_train.shape[0], "train samples")
-    print(X_test.shape[0], "test samples")
-
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
-
     mean, std = X_train.mean(), X_train.std()
-    print("training mean: {} std: {}".format(mean, std))
 
     with open(args.params_path) as params_file:
         hyperparameters = json.load(params_file)
@@ -67,16 +61,15 @@ if __name__ == "__main__":
         model = load_model(args.model_artifact)
     else:
         model = MODELS.get(args.model_name)(
-            input_shape=X_train[0].shape,
-            n_classes=y_train.shape[-1],
-            base_filters=hyperparameters["base_filters"],
-            activation=hyperparameters["activation"],
-            fc_size=hyperparameters["fc_size"],
-            dropout=hyperparameters["dropout"],
-            classifier_activation=hyperparameters["classifier_activation"],
+            input_shape=X_train[0].shape, n_classes=y_train.shape[-1], **hyperparameters
         )
-        model.summary()
         model.compile("adam", loss=hyperparameters["loss"], metrics=["acc"])
+    model.summary()
+
+    print("x_train shape:", X_train.shape)
+    print(X_train.shape[0], "train samples")
+    print(X_test.shape[0], "test samples")
+    print("training mean: {} std: {}".format(mean, std))
 
     image_data_generator = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
