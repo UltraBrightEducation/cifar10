@@ -10,18 +10,36 @@ from keras.layers import (
     Dropout,
     Flatten,
     Activation,
-    GlobalAveragePooling2D)
+    GlobalAveragePooling2D,
+    regularizers,
+)
 from keras.models import Model
 
 
-def _conv_block(x, filters, kernel_size, activation, pool=(2, 2)):
-    hidden = Conv2D(filters, kernel_size, activation=activation, padding="same")(x)
-    hidden = Conv2D(filters, kernel_size, activation=activation, padding="same")(hidden)
+def _conv_block(
+    x, filters, activation, dropout=0.2, weight_decay=1e-4, kernel_size=3, pool=(2, 2)
+):
+    hidden = Conv2D(
+        filters,
+        kernel_size,
+        activation=activation,
+        padding="same",
+        kernel_regularizer=regularizers.l2(weight_decay),
+    )(x)
+    hidden = Conv2D(
+        filters,
+        kernel_size,
+        activation=activation,
+        padding="same",
+        kernel_regularizer=regularizers.l2(weight_decay),
+    )(hidden)
+    hidden = BatchNormalization()(hidden)
     hidden = MaxPool2D(pool_size=pool)(hidden)
+    hidden = Dropout(dropout)(hidden)
     return hidden
 
 
-def convnet7(
+def convnet6(
     input_shape,
     n_classes,
     base_filters,
@@ -31,30 +49,16 @@ def convnet7(
     classifier_activation,
 ):
     image = Input(shape=input_shape)
-
-    conv_1 = _conv_block(
-        image, filters=base_filters, kernel_size=3, activation=activation, pool=2
-    )
-    conv_2 = Dropout(dropout)(conv_1)
-    conv_3 = _conv_block(conv_2, base_filters * 2, kernel_size=3, activation=activation)
-    conv_4 = _conv_block(
-        conv_3, base_filters * 2, kernel_size=3, activation=activation, pool=2
-    )
-    conv_5 = Dropout(dropout)(conv_4)
-    conv_6 = Conv2D(
-        base_filters * 2, kernel_size=1, activation=activation, padding="same"
-    )(conv_5)
-
+    conv_1 = _conv_block(image, base_filters, activation, dropout=dropout)
+    conv_2 = _conv_block(conv_1, base_filters * 2, activation, dropout=dropout + 0.1)
+    conv_3 = _conv_block(conv_2, base_filters * 4, activation, dropout=dropout + 0.2)
     # hidden = GlobalMaxPooling2D()(conv_6)
-    hidden = Flatten()(conv_6)
-    hidden = Dropout(dropout)(hidden)
+    # conv_4 = Conv2D(filters=base_filters * 4, kernel_size=1, activation=activation)
+    hidden = Flatten()(conv_3)
 
     fc_1 = Dense(fc_size, activation=activation)(hidden)
-    fc_1 = Dropout(dropout)(fc_1)
-    fc_2 = Dense(fc_size, activation=activation)(fc_1)
-    fc_2 = Dropout(dropout)(fc_2)
+    predictions = Dense(n_classes, activation=classifier_activation)(fc_1)
 
-    predictions = Dense(n_classes, activation=classifier_activation)(fc_2)
     return Model(image, predictions)
 
 
@@ -93,15 +97,10 @@ def convnet4(
 
 
 def inception_v3(
-    input_shape,
-    n_classes,
-    activation,
-    classifier_activation,
-    fc_size,
-    **kwargs
+    input_shape, n_classes, activation, classifier_activation, fc_size, **kwargs
 ):
     image = Input(shape=input_shape)
-    base_model = InceptionV3(input_tensor=image, weights='imagenet', include_top=False)
+    base_model = InceptionV3(input_tensor=image, weights="imagenet", include_top=False)
     x = base_model.output
     x = GlobalAveragePooling2D()(x)
     x = Dense(fc_size, activation=activation)(x)
@@ -111,4 +110,3 @@ def inception_v3(
         layer.trainable = False
 
     return Model(image, predictions)
-
