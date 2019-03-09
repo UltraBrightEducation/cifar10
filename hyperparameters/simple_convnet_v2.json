@@ -2,7 +2,7 @@
   "batch_size": 32,
   "base_filters": 32,
   "activation": "elu",
-  "fc_size": 258,
+  "fc_size": 512,
   "dropout": 0.3,
   "classifier_activation": "softmax",
   "loss": "categorical_crossentropy"

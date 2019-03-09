@@ -85,21 +85,21 @@ if __name__ == "__main__":
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
         zca_epsilon=1e-06,  # epsilon for ZCA whitening
-        rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=20,  # randomly rotate images in the range (degrees, 0 to 180)
         # randomly shift images horizontally (fraction of total width)
         width_shift_range=0.1,
         # randomly shift images vertically (fraction of total height)
         height_shift_range=0.1,
-        shear_range=0.0,  # set range for random shear
-        zoom_range=0.0,  # set range for random zoom
+        shear_range=0.1,  # set range for random shear
+        zoom_range=0.1,  # set range for random zoom
         channel_shift_range=0.0,  # set range for random channel shifts
         # set mode for filling points outside the input boundaries
         fill_mode="nearest",
         cval=0.0,  # value used for fill_mode = "constant"
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False,  # randomly flip images
+        vertical_flip=True,  # randomly flip images
         # set rescaling factor (applied before any other transformation)
-        rescale=None,
+        rescale=1.0 / 255,
         # set function that will be applied on each input
         preprocessing_function=None,
         # image data format, either "channels_first" or "channels_last"
