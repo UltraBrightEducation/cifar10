@@ -33,6 +33,8 @@ def _conv_block(
         padding="same",
         kernel_regularizer=regularizers.l2(weight_decay),
     )(x)
+    if batch_normalization:
+        hidden = BatchNormalization()(hidden)
     hidden = Conv2D(
         filters,
         kernel_size,

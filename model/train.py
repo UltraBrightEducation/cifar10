@@ -7,7 +7,7 @@ from datetime import datetime
 
 import keras
 import numpy as np
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
+from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping, ReduceLROnPlateau
 from keras.models import load_model
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.utils import compute_class_weight
@@ -52,7 +52,12 @@ if __name__ == "__main__":
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
-    mean, std = X_train.mean(), X_train.std()
+    X_train = X_train.astype(np.float32)
+    X_test = X_test.astype(np.float32)
+    mean = np.mean(X_train, axis=(0, 1, 2, 3))
+    std = np.std(X_train, axis=(0, 1, 2, 3))
+    X_train = (X_train - mean) / (std + 1e-7)
+    X_test = (X_test - mean) / (std + 1e-7)
 
     with open(args.params_path) as params_file:
         hyperparameters = json.load(params_file)
@@ -63,7 +68,8 @@ if __name__ == "__main__":
         model = MODELS.get(args.model_name)(
             input_shape=X_train[0].shape, n_classes=y_train.shape[-1], **hyperparameters
         )
-        model.compile("adam", loss=hyperparameters["loss"], metrics=["acc"])
+        optim = keras.optimizers.rmsprop(lr=hyperparameters["learning_rate"], decay=1e-6)
+        model.compile(optimizer=optim, loss=hyperparameters["loss"], metrics=["acc"])
     model.summary()
 
     print("x_train shape:", X_train.shape)
@@ -78,21 +84,21 @@ if __name__ == "__main__":
         samplewise_std_normalization=False,  # divide each input by its std
         zca_whitening=False,  # apply ZCA whitening
         zca_epsilon=1e-06,  # epsilon for ZCA whitening
-        rotation_range=20,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=15,  # randomly rotate images in the range (degrees, 0 to 180)
         # randomly shift images horizontally (fraction of total width)
         width_shift_range=0.1,
         # randomly shift images vertically (fraction of total height)
         height_shift_range=0.1,
         shear_range=0.1,  # set range for random shear
-        zoom_range=0.1,  # set range for random zoom
+        zoom_range=0.0,  # set range for random zoom
         channel_shift_range=0.0,  # set range for random channel shifts
         # set mode for filling points outside the input boundaries
         fill_mode="nearest",
         cval=0.0,  # value used for fill_mode = "constant"
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=True,  # randomly flip images
+        vertical_flip=False,  # randomly flip images
         # set rescaling factor (applied before any other transformation)
-        rescale=1.0 / 255,
+        rescale=None,
         # set function that will be applied on each input
         preprocessing_function=None,
         # image data format, either "channels_first" or "channels_last"
@@ -105,13 +111,14 @@ if __name__ == "__main__":
     model.fit_generator(
         generator=image_data_generator.flow(X_train, y_train, batch_size=batch_size),
         steps_per_epoch=len(X_train) // batch_size,
-        epochs=100,
+        epochs=200,
         validation_data=(X_test, y_test),
         class_weight=get_class_weight(y_train),
         callbacks=[
             ModelCheckpoint(checkpoint_format),
             TensorBoard(log_dir=log_dir),
             EarlyStopping(patience=10),
+            ReduceLROnPlateau(patience=6, factor=0.3)
         ],
     )
 
