@@ -117,7 +117,7 @@ if __name__ == "__main__":
         callbacks=[
             ModelCheckpoint(checkpoint_format),
             TensorBoard(log_dir=log_dir),
-            EarlyStopping(patience=10),
+            EarlyStopping(patience=15),
             ReduceLROnPlateau(patience=6, factor=0.3)
         ],
     )
