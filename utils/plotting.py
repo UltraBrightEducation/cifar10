@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, auc
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 from sklearn.utils.multiclass import unique_labels
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,15 +57,13 @@ def plot_confusion_matrix(
 
 
 def plot_multi_auc(y_true, y_pred, classes):
-    fpr = np.empty_like(y_pred)
-    tpr = np.empty_like(y_pred)
-    y_pred = np.empty_like(y_pred)
+    fpr = dict()
+    tpr = dict()
     roc_auc = dict()
     for i, class_name in enumerate(classes):
-        y_pred[:, i] = y_pred == i
-        fpr[:, i], tpr[:, i], _ = roc_curve(y_true[:, i], y_pred[:, i])
-        roc_auc[i] = auc(fpr[:, i], tpr[:, i])
-        plt.plot(fpr[:, i], tpr[:, i], label='%s ROC (area = %0.2f)' % (class_name, roc_auc[i]))
+        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+        plt.plot(fpr[i], tpr[i], label='%s ROC (area = %0.2f)' % (class_name, roc_auc[i]))
 
     fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), y_pred.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
