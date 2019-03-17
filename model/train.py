@@ -30,7 +30,7 @@ def get_class_weight(y_true):
     pos = 0
     y_weight = np.zeros(int(class_counts.sum()))
     for i, count in enumerate(class_counts):
-        y_weight[pos: pos + count] = i
+        y_weight[pos : pos + count] = i
         pos += count
     weights = np.sqrt(compute_class_weight("balanced", classes, y_weight))
     return {i: weight for i, weight in enumerate(weights)}
