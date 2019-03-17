@@ -11,3 +11,4 @@ sagemaker==1.18.1
 black==18.9b0
 tensorflow==1.10.1
 pytest==3.9.2
+seaborn==0.9.0

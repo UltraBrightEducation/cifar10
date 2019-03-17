@@ -7,12 +7,18 @@ from datetime import datetime
 
 import keras
 import numpy as np
-from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import (
+    ModelCheckpoint,
+    TensorBoard,
+    EarlyStopping,
+    ReduceLROnPlateau,
+)
 from keras.models import load_model
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
 
+from data.processing import standardize_data
 from model.model import convnet6, convnet4, inception_v3
 
 MODELS = {"convnet6": convnet6, "convnet4": convnet4, "inception_v3": inception_v3}
@@ -24,7 +30,7 @@ def get_class_weight(y_true):
     pos = 0
     y_weight = np.zeros(int(class_counts.sum()))
     for i, count in enumerate(class_counts):
-        y_weight[pos : pos + count] = i
+        y_weight[pos: pos + count] = i
         pos += count
     weights = np.sqrt(compute_class_weight("balanced", classes, y_weight))
     return {i: weight for i, weight in enumerate(weights)}
@@ -52,12 +58,8 @@ if __name__ == "__main__":
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
     y_train = keras.utils.to_categorical(y_train, num_classes=10)
     y_test = keras.utils.to_categorical(y_test, num_classes=10)
-    X_train = X_train.astype(np.float32)
-    X_test = X_test.astype(np.float32)
-    mean = np.mean(X_train, axis=(0, 1, 2, 3))
-    std = np.std(X_train, axis=(0, 1, 2, 3))
-    X_train = (X_train - mean) / (std + 1e-7)
-    X_test = (X_test - mean) / (std + 1e-7)
+    X_train = standardize_data(X_train)
+    X_test = standardize_data(X_test)
 
     with open(args.params_path) as params_file:
         hyperparameters = json.load(params_file)
@@ -68,14 +70,15 @@ if __name__ == "__main__":
         model = MODELS.get(args.model_name)(
             input_shape=X_train[0].shape, n_classes=y_train.shape[-1], **hyperparameters
         )
-        optim = keras.optimizers.rmsprop(lr=hyperparameters["learning_rate"], decay=1e-6)
+        optim = keras.optimizers.rmsprop(
+            lr=hyperparameters["learning_rate"], decay=1e-6
+        )
         model.compile(optimizer=optim, loss=hyperparameters["loss"], metrics=["acc"])
     model.summary()
 
     print("x_train shape:", X_train.shape)
     print(X_train.shape[0], "train samples")
     print(X_test.shape[0], "test samples")
-    print("training mean: {} std: {}".format(mean, std))
 
     image_data_generator = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
@@ -118,7 +121,7 @@ if __name__ == "__main__":
             ModelCheckpoint(checkpoint_format),
             TensorBoard(log_dir=log_dir),
             EarlyStopping(patience=15),
-            ReduceLROnPlateau(patience=6, factor=0.3)
+            ReduceLROnPlateau(patience=6, factor=0.3),
         ],
     )
 
