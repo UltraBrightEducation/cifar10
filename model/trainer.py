@@ -23,25 +23,26 @@ class Cifar10Trainer:
         model_name,
         hyperparameters,
         artifact_directory,
-        X_train,
+        x_train,
         y_train,
-        X_test,
+        x_test,
         y_test,
         model_artifact=None,
     ):
         self.hyperparameters = hyperparameters
         self.batch_size = self.hyperparameters["batch_size"]
         self.artifact_directory = artifact_directory
-        self.X_train = X_train
+        self.x_train = x_train
         self.y_train = y_train
-        self.X_test = X_test
+        self.x_test = x_test
         self.y_test = y_test
-        self.input_shape = X_train[0].shape
+        self.input_shape = x_train[0].shape
         self.n_classes = y_train.shape[-1]
         if model_artifact:
             self.model = load_model(model_artifact)
         else:
             self.model = self._build_model(model_name)
+        self.model.summary()
         self.image_data_generator = self._get_image_generator()
         pathlib.Path(self.artifact_directory).mkdir(parents=True, exist_ok=True)
 
@@ -58,7 +59,6 @@ class Cifar10Trainer:
         model.compile(
             optimizer=optim, loss=self.hyperparameters["loss"], metrics=["acc"]
         )
-        model.summary()
         return model
 
     def _get_image_generator(self):
@@ -100,7 +100,7 @@ class Cifar10Trainer:
             validation_split=0.0,
         )
         return image_generator.flow(
-            self.X_train, self.y_train, batch_size=self.batch_size
+            self.x_train, self.y_train, batch_size=self.batch_size
         )
 
     def train(self):
@@ -116,9 +116,9 @@ class Cifar10Trainer:
         pathlib.Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.model.fit_generator(
             generator=self.image_data_generator,
-            steps_per_epoch=len(self.X_train) // self.batch_size,
+            steps_per_epoch=len(self.x_train) // self.batch_size,
             epochs=200,
-            validation_data=(self.X_test, self.y_test),
+            validation_data=(self.x_test, self.y_test),
             class_weight=self.get_class_weight(self.y_train),
             callbacks=[
                 ModelCheckpoint(checkpoint_format),
@@ -146,6 +146,6 @@ class Cifar10Trainer:
         return {i: weight for i, weight in enumerate(weights)}
 
     def evaluate(self):
-        scores = self.model.evaluate(self.X_test, self.y_test, verbose=1)
+        scores = self.model.evaluate(self.x_test, self.y_test, verbose=1)
         print("Test loss:", scores[0])
         print("Test accuracy:", scores[1])

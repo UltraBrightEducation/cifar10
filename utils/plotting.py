@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve, auc
 from sklearn.utils.multiclass import unique_labels
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,9 +17,7 @@ def plot_confusion_matrix(
         else:
             title = "Confusion matrix, without normalization"
 
-    # Compute confusion matrix
     cm = confusion_matrix(y_true, y_pred)
-    # Only use the labels that appear in the data
     classes = [classes[x] for x in unique_labels(y_true, y_pred)]
     if normalize:
         cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
@@ -27,16 +25,12 @@ def plot_confusion_matrix(
     else:
         print("Confusion matrix, without normalization")
 
-    print(cm)
-
     fig, ax = plt.subplots(figsize=(6, 6))
     im = ax.imshow(cm, interpolation="nearest", cmap=cmap)
     ax.figure.colorbar(im, ax=ax)
-    # We want to show all ticks...
     ax.set(
         xticks=np.arange(cm.shape[1]),
         yticks=np.arange(cm.shape[0]),
-        # ... and label them with the respective list entries
         xticklabels=classes,
         yticklabels=classes,
         title=title,
@@ -44,10 +38,8 @@ def plot_confusion_matrix(
         xlabel="Predicted label",
     )
 
-    # Rotate the tick labels and set their alignment.
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
-    # Loop over data dimensions and create text annotations.
     fmt = ".2f" if normalize else "d"
     thresh = cm.max() / 2.0
     for i in range(cm.shape[0]):
@@ -61,4 +53,32 @@ def plot_confusion_matrix(
                 color="white" if cm[i, j] > thresh else "black",
             )
     fig.tight_layout()
-    return ax
+    return ax, cm
+
+
+def plot_multi_auc(y_true, y_pred, classes):
+    fpr = np.empty_like(y_pred)
+    tpr = np.empty_like(y_pred)
+    y_pred = np.empty_like(y_pred)
+    roc_auc = dict()
+    for i, class_name in enumerate(classes):
+        y_pred[:, i] = y_pred == i
+        fpr[:, i], tpr[:, i], _ = roc_curve(y_true[:, i], y_pred[:, i])
+        roc_auc[i] = auc(fpr[:, i], tpr[:, i])
+        plt.plot(fpr[:, i], tpr[:, i], label='%s ROC (area = %0.2f)' % (class_name, roc_auc[i]))
+
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), y_pred.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+    plt.plot(fpr["micro"], tpr["micro"], label='%s ROC (area = %0.2f)' % ("micro", roc_auc["micro"]))
+
+    plt.plot([0, 1], [0, 1], 'r--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
+    return fpr, tpr, roc_auc
+
