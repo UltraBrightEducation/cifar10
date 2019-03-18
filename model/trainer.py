@@ -14,7 +14,9 @@ from keras_preprocessing.image import ImageDataGenerator
 import numpy as np
 from sklearn.utils import compute_class_weight
 
-from model.train import MODELS
+from model.model import convnet6, convnet4, inception_v3
+
+MODELS = {"convnet6": convnet6, "convnet4": convnet4, "inception_v3": inception_v3}
 
 
 class Cifar10Trainer:

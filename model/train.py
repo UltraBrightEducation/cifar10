@@ -9,9 +9,7 @@ from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
 
 from data.processing import standardize_data
-from model.model import convnet6, convnet4, inception_v3
-import model
-MODELS = {"convnet6": convnet6, "convnet4": convnet4, "inception_v3": inception_v3}
+from model.trainer import Cifar10Trainer
 
 
 def get_class_weight(y_true):
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     with open(args.params_path) as params_file:
         hyperparameters = json.load(params_file)
 
-    trainer = model.trainer.Cifar10Trainer(
+    trainer = Cifar10Trainer(
         model_name=args.model_name,
         hyperparameters=hyperparameters,
         artifact_directory=artifact_directory,

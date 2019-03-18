@@ -53,6 +53,7 @@ def plot_confusion_matrix(
                 color="white" if cm[i, j] > thresh else "black",
             )
     fig.tight_layout()
+    plt.show()
     return ax, cm
 
 
@@ -60,6 +61,7 @@ def plot_multi_auc(y_true, y_pred, classes):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
+    plt.figure(figsize=(8, 8))
     for i, class_name in enumerate(classes):
         fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
         roc_auc[i] = auc(fpr[i], tpr[i])
