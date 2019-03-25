@@ -9,7 +9,7 @@ from sklearn.utils import compute_class_weight
 from keras.datasets import cifar10
 
 from data.processing import standardize_data
-from model.trainer import Cifar10Trainer
+from model.trainer import Cifar10Trainer, MODELS
 
 
 def get_class_weight(y_true):
