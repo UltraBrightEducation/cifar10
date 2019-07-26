@@ -3,7 +3,6 @@ from keras.models import load_model
 import matplotlib
 from sklearn.metrics import accuracy_score
 
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from utils.plotting import plot_confusion_matrix, plot_multi_auc
 import numpy as np
