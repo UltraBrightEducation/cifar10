@@ -1,7 +1,7 @@
 # CIFAR10 ConvNet
 
 ## About
-This python library designed for use in the Trudient Inc. AI Experience Module 4 - Computer Vision lab.
+This repo is an introduction to convolutional neural network using Keras
 
 The lab exercises can be found in `notebooks/CIFAR10.ipynb`
 
